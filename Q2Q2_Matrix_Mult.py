@@ -3,25 +3,21 @@ from qiskit.quantum_info import Statevector, Operator
 import numpy as np
 from collections import defaultdict
 
-# Pattern Vectors derived from 0000, 1100, 1010, 0110
-PC_patterns_16 = [
-    "0000000000000000",
-    "1111111100000000",
-    "1111000011110000",
-    "0000111111110000",
-    "1100110011001100",
-    "0011001111001100",
-    "0011110000111100",
-    "1100001100111100",
-    "1010101010101010",
-    "0101010110101010",
-    "0101101001011010",
-    "1010010101011010",
-    "0110011001100110",
-    "1001100101100110",
-    "1001011010010110",
-    "0110100110010110",
-]
+bases = ["1111", "1100", "1010", "0110"]
+
+PC_patterns_16 = []
+# builds 16 bit patterns from the bases patterns
+for p in bases:
+    for q in bases:
+        base = ""
+        for bit in p:
+            if bit == '1':
+                base = base + q
+            else:
+                not_q = ''.join('1' if b == '0' else '0' for b in q)
+                base = base + not_q
+                
+        PC_patterns_16.append(base)
 
 # Reverses bit string
 def pattern_to_vector(p):
