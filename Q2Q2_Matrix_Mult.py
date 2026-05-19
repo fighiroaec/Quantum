@@ -36,10 +36,25 @@ def build_C2():
     return qc
 
 
-# Creates the Tensor Product between C2 and C2
-def build_classifier_matrix():
+def build_C2_prime():
+
+    bits = []
+    for base in bases:
+        int_bits = [-1 if b == '1' else 1 for b in base]
+        bits.append(int_bits)
+        
+    c2_prime = 0.5 * np.array(bits)
     
-    c2_op = Operator(build_C2()).data
+    qc = QuantumCircuit(2, name='C2_prime')
+
+    qc.unitary(c2_prime, [0,1])
+    
+    return qc
+
+# Creates the Tensor Product between C2' and C2'
+def build_classifier_matrix():
+
+    c2_op = Operator(build_C2_prime()).data
     classifier = np.kron(c2_op, c2_op)  # C2 x C2
     
     return classifier
