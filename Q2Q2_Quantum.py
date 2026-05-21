@@ -1,8 +1,13 @@
-from qiskit import QuantumCircuit
-from qiskit.quantum_info import Statevector
+from qiskit import QuantumCircuit, transpile
+from qiskit.quantum_info import Statevector, Operator
+from qiskit.qasm3 import dumps
 import numpy as np
 from collections import defaultdict
 import itertools
+
+# Used for decomposing Matrix into Gates
+from qiskit.synthesis import TwoQubitBasisDecomposer
+from qiskit.circuit.library import CZGate
 
 bases = ["1111", "1100", "1010", "0110"]
 
@@ -36,6 +41,34 @@ def build_C2():
     qc.h([0, 1])
     return qc
 
+def build_C2_prime():
+
+    bits = []
+    for base in bases:
+        int_bits = [-1 if b == '1' else 1 for b in base]
+        bits.append(int_bits)
+    
+    c2_prime = 0.5 * np.array(bits, dtype=float)
+    qc = QuantumCircuit(2, name='C2_prime')
+
+    qc.unitary(c2_prime, [0,1])
+
+    U = Operator(qc).data
+    print(c2_prime)
+
+    decomp = transpile(qc, basis_gates=['u', 'h', 'cz', 'z'], optimization_level=0) # quantum circuit
+
+    print(decomp)
+    print(dumps(decomp)) # step-by-step instructions
+
+    m = Operator(c2_prime)
+    decomposer = TwoQubitBasisDecomposer(CZGate())
+
+    qc = decomposer(m)
+    print(qc)
+    
+    return qc
+
 # Builds an oracle that uses 4 bits for the input and 1 qubit for the label
 def build_oracle_4q(pattern_vector):
     qc = QuantumCircuit(5, name='Oracle')
@@ -66,8 +99,8 @@ def run_C2C2(pattern_vector):
     qc.h(4)
     qc.h([0, 1, 2, 3])
     qc.append(build_oracle_4q(pattern_vector).to_gate(), range(5))
-    qc.append(build_C2().to_gate(), [0, 1])   # C2 on qubits 0,1
-    qc.append(build_C2().to_gate(), [2, 3])   # C2 on qubits 2,3
+    qc.append(build_C2_prime().to_gate(), [0, 1])   # C2 on qubits 0,1
+    qc.append(build_C2_prime().to_gate(), [2, 3])   # C2 on qubits 2,3
     return qc
 
 
